@@ -51,11 +51,32 @@
 
 ## 解包产物落位
 
+主包（两引擎同名）：
+
+| wxapkg 文件名 | 工程内目标 |
+| --- | --- |
+| `__WITHOUT_MULTI_PLUGINCODE__.wxapkg` | 工程根（两引擎都落这里，内容不同，见下） |
+
+Cocos 主包产出 `game.js` / `game.json` / `project.config.json` / `bundles/` / `cocos-js/`；Unity 主包产出 `game.js` / `app-config.json` / `game.json` / `project.config.json` / `workers.js` / `images/`。
+
+Cocos 分包：
+
 | wxapkg 文件名 | 工程内目标目录 |
 | --- | --- |
-| `__WITHOUT_MULTI_PLUGINCODE__.wxapkg` | 工程根（`game.js` / `game.json` / `project.config.json` / `bundles/`） |
 | `_cocos-js_chunks_.wxapkg` | `<root>/cocos-js/chunks/` |
 | `_cocos-js_assets_.wxapkg` | `<root>/cocos-js/assets/` |
 | `_subpackages_<name>_.wxapkg` | `<root>/subpackages/<name>/` |
 
-落位后必须与 `game.json` 的 `subPackages[].root` 逐条对齐，名字或层级差一级就会出现「分包取不到」。分包目录深度保持 2 级，内部相对路径 `../../@babel/...` 才能正确指回根目录。
+Unity 分包：
+
+| wxapkg 文件名 | 工程内目标目录 |
+| --- | --- |
+| `_wasmcode_.wxapkg` | `<root>/wasmcode/`（`game.js` + `*.webgl.wasm.code.unityweb.wasm.br`） |
+| `_wasmcode1_.wxapkg` | `<root>/wasmcode1/` |
+| `plugins/<alias>/` | 内联进 `game.js`，或保留原目录（见 `unity.md`） |
+
+落位规则（两引擎通用）：
+
+- 必须与配置文件里的 `subPackages[].root` 逐条对齐（Cocos 看 `game.json`，Unity 看 `app-config.json`），名字或层级差一级就会出现「分包取不到」。
+- Cocos 分包目录深度保持 2 级，内部相对路径 `../../@babel/...` 才能正确指回根目录。
+- Unity 若 `app-config.json` 里有本机未采集到的分包（如 `data-package`、`wasmcode2`），必须删掉该项，否则运行时加载不存在的包会卡死。
